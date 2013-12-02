@@ -1,0 +1,221 @@
+/* Stylesheet Reset */
+
+html, body, h1, h2, h3, blockquote, p, ol, ul, li, img, iframe, button {
+padding: 0;
+margin: 0;
+font: normal normal normal 12px/16px "Helvetica Neue",Arial,sans-serif;
+text-decoration: none;
+-webkit-text-size-adjust: 100%;
+-ms-text-size-adjust: 100%;
+text-transform: none;
+vertical-align: baseline;
+list-style: none;
+border: 0;
+-webkit-outline: 0;
+-moz-outline: 0;
+-ms-outline: 0;
+-o-outline: 0;
+outline: 0;
+}
+
+a {
+	text-decoration: none;
+	color: inherit !important;
+}
+
+html, body {
+	background-color: transparent;
+	margin: 0;
+	border: 0;
+}
+
+body {
+	overflow: hidden;
+}
+
+.root {
+	zoom: 1;
+}
+
+.thm-dark {
+	background-color: #333333;
+	border-color: #444444;
+	color: #cfcfcf;
+}
+
+.thm-light {
+	background-color: #ffffff;
+	border-color: #e8e8e8;
+	color: #292f33;
+}
+
+.customisable-border {
+	border-width: 1px;
+	border-style: solid;
+}
+
+.customisable-bottom-border {
+	border-bottom-width: 1px;
+	border-bottom-style: solid;
+}
+
+.timeline {
+	border-radius: 5px;
+	font-family: 'Helvetica Neue',Arial,sans-serif;
+	width: 100%;
+	height: 100%;
+	max-width: 520px;
+	min-height: 200px;
+}
+
+.timeline-header {
+	padding: 12px;
+	width: auto;
+	overflow: auto;
+	background-position: top 6px right 6px;
+	background-repeat: no-repeat;
+	background-image: url('img/instagram-logo-30-thm-dark.png');
+}
+
+.timeline-header h1.summary {
+	font-size: 18px;
+	line-height: 18px;
+	font-weight: bold;
+	float: left;
+}
+
+.link-to-profile {
+	font-size: 14px;
+	font-weight: normal;
+	float: right;
+}
+
+.instagram-username, .instagram-icon {
+	float: left;
+	padding-right: 36px;
+}
+
+.instagram-username {
+	padding-top: 2px;
+}
+
+.stream {
+	position: relative;
+	width: 100%;
+	overflow-x: hidden;
+	overflow-y: scroll;
+}
+
+.stream .h-feed {
+	padding-top: 12px;
+	padding-bottom: 12px;
+}
+
+.stream .h-feed .h-entry {
+	padding-left: 12px;
+	padding-right: 12px;
+	padding-top: 12px;
+	padding-bottom: 12px;
+	font-size: 16px;
+}
+
+.instagram-photo-post {
+	background-color: #dddddd;
+	border-radius: 5px;
+	color: #999999;
+	font-size: 13px;
+}
+
+.instagram-photo-post-header, .instagram-photo-post-footer {
+	padding: 8px;
+	width: auto;
+	overflow: auto;
+}
+
+.instagram-post-profile {
+	float: left;
+	width: auto;
+	overflow: auto;
+}
+
+.instagram-post-profile-image {
+	display: block;
+	float: left;
+	width: 42px;
+	height: 42px;
+	border-radius: 5px;
+}
+
+.instagram-post-profile-name {
+	color: #555555;
+	font-weight: bold;
+	float: left;
+	margin-top: 12px;
+	margin-left: 12px;
+}
+
+.instagram-post-date {
+	float: right;
+	margin-top: 12px;
+}
+
+.instagram-image-placeholder {
+	background-size: cover;
+}
+
+.instagram-image-placeholder img {
+	display: block;
+	width: 100%;
+}
+
+.instagram-post-tags {
+	width: auto;
+	overflow: auto;
+}
+
+.instagram-post-tags > li {
+	float: left;
+	margin-right: 10px;
+	font-size: 13px;
+}
+
+.instagram-likes-and-comments {
+	width: auto;
+	overflow: auto;
+	margin-top: 10px;
+}
+
+.instagram-likes, .instagram-comments {
+	float: left;
+	margin-right: 15px;
+	height: 18px;
+	padding-right: 16px;
+	background-repeat: no-repeat;
+	background-position: right top;
+}
+
+.instagram-likes {
+	background-image: url('img/like.png');
+}
+
+.instagram-comments {
+	background-image: url('img/comment.png');
+}
+
+.timeline-footer {
+	padding-left: 12px;
+	padding-right: 12px;
+	padding-top: 13px;
+	padding-bottom: 13px;
+}
+
+.timeline-footer .tag-line {
+	font-size: 16px;
+	line-height: 16px;
+	font-weight: normal;
+}
+
+.timeline-footer .tag-line .hash-tag {
+	font-weight: bold;
+}
+

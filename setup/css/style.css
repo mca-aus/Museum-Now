@@ -1,0 +1,69 @@
+@import url('../fonts/stylesheet.css');
+
+.container {
+	width: 970px !important;
+	margin-bottom: 100px;
+}
+
+h1.fancy-title {
+	color: #333333;
+	font-family: 'code_pro_demoregular', 'Helvetica Neue', Arial, sans-serif;
+	margin-bottom: 30px;
+}
+
+.jumbotron {
+	margin-top: 100px;
+	margin-bottom: 100px;
+}
+
+.jumbotron .btn {
+	margin-top: 50px;
+}
+
+.tut-screen-image {
+	margin-top: 30px;
+	margin-bottom: 30px;
+}
+
+.instagram-stream-configuration {
+	overflow: auto;
+	width: auto;
+}
+
+.instagram-stream-settings {
+	float: left;
+	margin-right: 60px;
+	width: 390px;
+}
+
+.instagram-stream-container {
+	width: 350px;
+	height: 700px;
+	float: right;
+	margin-right: 15px;
+}
+
+.center-text {
+	text-align: center;
+}
+
+.digital-sign-container {
+	width: 949px;
+	height: 529px;
+	padding: 5px;
+	border: 1px solid #dddddd;
+	margin-bottom: 30px;
+}
+
+.custom-sign-content p {
+	margin-top: 20px;
+	margin-bottom: 30px;
+}
+
+form {
+	margin-bottom: 50px;
+}
+
+.upload-files-btn {
+	margin-left: 135px;
+}
