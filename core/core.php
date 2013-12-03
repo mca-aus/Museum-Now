@@ -81,6 +81,30 @@ function make_json_pretty($json) {
 }
 
 /**
+ * Removes an entire directory and its files
+ * @param type $dir The directory to remove
+ * @see http://us3.php.net/manual/en/function.rmdir.php#107233
+ */
+function rrmdir($dir) 
+{
+	if (is_dir($dir)) 
+	{
+		$objects = scandir($dir);
+		foreach ($objects as $object) 
+		{
+			if ($object != "." && $object != "..") 
+			{
+				if (filetype($dir . "/" . $object) == "dir")
+					rrmdir($dir . "/" . $object); else
+					unlink($dir . "/" . $object);
+			}
+		}
+		reset($objects);
+		rmdir($dir);
+	}
+}
+
+/**
  * Recursive glob function, see: 
  * http://thephpeffect.com/recursive-glob-vs-recursive-directory-iterator/
  *
@@ -133,6 +157,10 @@ function determine_museum_now_root($getRootURL = TRUE)
 			$rootURLHost = $protocol.$_SERVER['HTTP_HOST'];
 			$root = $rootURLHost.$pathOnServer;
 		}
+		else
+		{
+			$root = $rootDirectoryInFileSystem;
+		}
 	
 		return $root."/";
 	}
@@ -141,6 +169,7 @@ function determine_museum_now_root($getRootURL = TRUE)
 		throw new Exception("get_museum_now_root() cannot be called from the command line");
 	}
 }
+
 /**
  * Returns the absolute URL root for the current Museum Now installation.
  * Will only work if Museum Now has been installed - otherwise an exception
@@ -368,26 +397,82 @@ function stop_instagram_downloader()
 }
 
 /**
+ * Creates the empty directory structures Museum Now needs to run. These include
+ * - /cached/images
+ * - /cached/profilephotos
+ * - /log 
+ */
+function create_file_structures_for_museum_now()
+{
+	$directoriesToCreate = array(
+		'cached',
+		'cached/images',
+		'cached/profilephotos',
+		'log',
+		'config'
+	);
+	$baseDir = determine_museum_now_root(FALSE);
+	
+	foreach ($directoriesToCreate as $directoryToCreate)
+	{
+		$fullPathOfDirectoryToCreate = $baseDir.$directoryToCreate;
+		if (!file_exists($fullPathOfDirectoryToCreate))
+		{
+			mkdir($fullPathOfDirectoryToCreate);
+		}
+	}
+}
+
+/**
  * Resets the Museum Now installation 
  */
 function reset_installation()
 {
 	stop_instagram_downloader();
 	@unlink(realpath(dirname(__FILE__)."/../config/config.json"));
-	$imageFilePathsInCacheDirectory = rglob(realpath(dirname(__FILE__).'/../cached').'/*.jpg');
-	foreach ($imageFilePathsInCacheDirectory as $imageToDelete)
+	
+	$pathOfCachedImagesDirectory = realpath(dirname(__FILE__).'/../cached');
+	$pathOfDigitalSignImagesDirectory = realpath(dirname(__FILE__).'/../digitalsign/img');
+	
+	if (file_exists($pathOfCachedImagesDirectory))
 	{
-		unlink($imageToDelete);
+		$imageFilePathsInCacheDirectory = rglob($pathOfCachedImagesDirectory.'/*.jpg');
+		foreach ($imageFilePathsInCacheDirectory as $imageToDelete)
+		{
+			unlink($imageToDelete);
+		}
 	}
-	$imageFilePathInDigitalSignDirectory = rglob(realpath(dirname(__FILE__).'/../digitalsign/img').'/*.*');
-	foreach ($imageFilePathInDigitalSignDirectory as $imageToDelete)
+	if (file_exists($pathOfDigitalSignImagesDirectory))
 	{
-		unlink($imageToDelete);
+		$imageFilePathInDigitalSignDirectory = rglob($pathOfDigitalSignImagesDirectory.'/*.*');
+		foreach ($imageFilePathInDigitalSignDirectory as $imageToDelete)
+		{
+			unlink($imageToDelete);
+		}
 	}
 	file_put_contents(realpath(dirname(__FILE__)."/../get/instagram-photos.json"), make_json_pretty(json_encode(array())));
 	file_put_contents(realpath(dirname(__FILE__)."/../get/instagram-users.json"), make_json_pretty(json_encode(array())));
 	@unlink(realpath(dirname(__FILE__)."/../cron/download-instagram-photos-scheduler.sh"));
 	@unlink(realpath(dirname(__FILE__)."/../cron/download-instagram-photos-scheduler-pid.dat"));
+	
+	// Delete /cached/images; /cached/profilephotos and /log 
+	$directoriesToRemove = array(
+		'cached',
+		'cached/images',
+		'cached/profilephotos',
+		'log',
+		'config'
+	);
+	$baseDir = determine_museum_now_root(FALSE);
+	foreach ($directoriesToRemove as $directoryToRemove)
+	{
+		$fullPathOfDirectoryToRemove = $baseDir.$directoryToRemove;
+		if (file_exists($fullPathOfDirectoryToRemove))
+		{
+			rrmdir($fullPathOfDirectoryToRemove);
+		}
+	}
+	
 }
 
 /**
@@ -457,12 +542,8 @@ function output_permissions_error()
 				<p>Museum Now needs to be able to write files to your Web Server in order to function correctly. You are most likely receiving this message because it doesn\'t have permission to write files on the server.</p>
 				<p>In order to continue, you will need to grant your Web Server and PHP processes <b>read</b> and <b>write</b> access to the following directories:</p>
 				<ul>
-					<li><code>'.get_url_root().'config/</code></li>
 					<li><code>'.get_url_root().'cron/</code></li>
-					<li><code>'.get_url_root().'log/</code></li>
 					<li><code>'.get_url_root().'get/</code></li>
-					<li><code>'.get_url_root().'cached/images/</code></li>
-					<li><code>'.get_url_root().'cached/profilephotos/</code></li>
 				</ul>
 				<p>Most likely you will need to use the <code>chmod</code> command or some other tool to manage file permissions on the server.</p>
 				<p><a href="#" class="btn btn-primary btn-lg" role="button" onclick="window.location.reload(true)">OK, I fixed the permissions. Let\'s Go!</a></p>
@@ -525,12 +606,8 @@ function go_to_tutorial_introduction_if_not_in_setup_session()
 function permissions_ok()
 {
 	$filePathsToTest = array(
-		realpath(dirname(__FILE__)).'/../config/',
 		realpath(dirname(__FILE__)).'/../cron/',
-		realpath(dirname(__FILE__)).'/../log/',
-		realpath(dirname(__FILE__)).'/../get/',
-		realpath(dirname(__FILE__)).'/../cached/images/',
-		realpath(dirname(__FILE__)).'/../cached/profilephotos/'
+		realpath(dirname(__FILE__)).'/../get/'
 	);
 	foreach ($filePathsToTest as $filePathToTest)
 	{

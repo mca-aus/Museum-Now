@@ -23,6 +23,7 @@ if(is_running_from_command_line())
 	exit();
 }
 
+create_file_structures_for_museum_now();
 set_config('museum-now-root', determine_museum_now_root());
 $redirectURL = determine_museum_now_root()."setup/intro";
 header("Location: {$redirectURL}");

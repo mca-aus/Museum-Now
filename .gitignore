@@ -2,3 +2,12 @@ nbproject/private/private.properties
 nbproject/private/private.xml
 test/schedule-instagram-downloader.test.php
 test/test.php
+/config/config.json
+/cached/
+/cron/download-instagram-photos-scheduler-pid.dat
+/cron/download-instagram-photos-scheduler.sh
+/log/
+nbproject/project.properties
+nbproject/project.xml
+get/instagram-photos.json
+get/instagram-users.json
