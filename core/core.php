@@ -11,7 +11,10 @@
  */
 
 date_default_timezone_set('Australia/Sydney');
-define('CONFIG_FILE', realpath(dirname(__FILE__)).'/../config/config.json');
+define('GENERAL_CONFIG_FILE', realpath(dirname(__FILE__)).'/../config/config.json');
+define('PROXY_CONFIG_FILE', realpath(dirname(__FILE__)).'/../config/proxy.json');
+define('PROXY_SETTINGS_KEYS_SERIALIZED', serialize(array('proxy-server', 'proxy-port', 'proxy-username', 'proxy-password')));
+define('INSTAGRAM_WEBSITE', "http://instagram.com/");
 define('PHOTOS_FROM_OWN_FEED_API_ENDPOINT', 'https://api.instagram.com/v1/users/self/media/recent');
 define('LIKED_PHOTOS_API_ENDPOINT', 'https://api.instagram.com/v1/users/self/media/liked');
 define('AMOUNT_OF_PHOTOS_TO_DOWNLOAD', '16');
@@ -105,6 +108,29 @@ function rrmdir($dir)
 }
 
 /**
+ * Determine if a directory is empty from 
+ * {@link http://stackoverflow.com/questions/7497733/how-can-use-php-to-check-if-a-directory-is-empty}
+ * @param string $dir The directory to check.
+ * @return null|boolean TRUE if empty, FALSE if not empty, NULL if not readable
+ */
+function is_dir_empty($dir) 
+{
+	if (!is_readable($dir))
+	{
+		return NULL;
+	}
+	$handle = opendir($dir);
+	while (false !== ($entry = readdir($handle))) 
+	{
+		if ($entry != "." && $entry != "..") 
+		{
+			return FALSE;
+		}
+	}
+	return TRUE;
+}
+
+/**
  * Recursive glob function, see: 
  * http://thephpeffect.com/recursive-glob-vs-recursive-directory-iterator/
  *
@@ -143,6 +169,7 @@ function determine_museum_now_root($getRootURL = TRUE)
 		
 		// Determine the document root on the server
 		$pathOnServer = $_SERVER['PHP_SELF'];
+		$currentPath = null;
 		while (strtolower($currentPath) !=  $fileSystemFolderName)
 		{
 			$pathOnServerComponents = explode("/", $pathOnServer);
@@ -211,7 +238,7 @@ function get_absolute_path_of_museum_now_folder()
  */
 function museum_now_is_installed()
 {
-	if (file_exists(CONFIG_FILE))
+	if (file_exists(GENERAL_CONFIG_FILE))
 	{
 		return TRUE;
 	}
@@ -288,16 +315,24 @@ function is_running_from_command_line()
 }
 
 /**
- * Retrieves a value from the configuration file for a givem key.
+ * Retrieves a value from a configuration file for a given key. By default,
+ * it retrieves key-value pairs from the general configuration file
+ * (GENERAL_CONFIG_FILE) although it can optionally retrieve / set key value
+ * pairs from other config files as well. 
+ * 
  * @param string $key The key to retrieve the value for.
+ * 
+ * @param string $configFile The full file path of the config to set / get
+ * keys from, defaults to GENERAL_CONFIG_FILE
+ * 
  * @return string The value for the given key, or FALSE if the value doesn't
  * exist.
  */
-function get_config($key)
+function get_config($key, $configFile = GENERAL_CONFIG_FILE)
 {
-	if (file_exists(CONFIG_FILE))
+	if (file_exists($configFile))
 	{
-		$configData = json_decode(file_get_contents(CONFIG_FILE));
+		$configData = json_decode(file_get_contents($configFile));
 		if (isset($configData->$key))
 		{
 			return $configData->$key;
@@ -317,24 +352,28 @@ function get_config($key)
  * Stores a value to the configuration file for a given key-value pair.
  * 
  * @param string $key The key to store.
+ * 
  * @param string $val The accompanying value.
+ * 
+ * @param string $configFile The full file path of the config to set / get
+ * keys from, defaults to GENERAL_CONFIG_FILE
  * 
  * @return int The number of bytes written to /config/config.json, or 
  * boolean FALSE on failure.
  */
-function set_config($key, $val)
+function set_config($key, $val, $configFile = GENERAL_CONFIG_FILE)
 {
-	if(file_exists(CONFIG_FILE))
+	if(file_exists($configFile))
 	{
-		$configData = json_decode(file_get_contents(CONFIG_FILE));
+		$configData = json_decode(file_get_contents($configFile));
 	}
 	else
 	{
 		$configData = (object) array();
 	}
 	$configData->$key = $val;
-	file_put_contents(CONFIG_FILE, make_json_pretty(json_encode($configData)));
-	chmod(CONFIG_FILE, 0777);
+	file_put_contents($configFile, make_json_pretty(json_encode($configData)));
+	@chmod($configFile, 0777);
 }
 
 /**
@@ -401,6 +440,7 @@ function stop_instagram_downloader()
  * - /cached/images
  * - /cached/profilephotos
  * - /log 
+ * - /config (if it doesn't exist)
  */
 function create_file_structures_for_museum_now()
 {
@@ -408,8 +448,7 @@ function create_file_structures_for_museum_now()
 		'cached',
 		'cached/images',
 		'cached/profilephotos',
-		'log',
-		'config'
+		'log'
 	);
 	$baseDir = determine_museum_now_root(FALSE);
 	
@@ -425,8 +464,11 @@ function create_file_structures_for_museum_now()
 
 /**
  * Resets the Museum Now installation 
+ * 
+ * @param boolean $resetProxySettings If set to FALSE, proxy settings defined
+ * in /config/proxy.json are NOT reset (by default, proxy settings are reset).
  */
-function reset_installation()
+function reset_installation($resetProxySettings = TRUE)
 {
 	stop_instagram_downloader();
 	@unlink(realpath(dirname(__FILE__)."/../config/config.json"));
@@ -460,8 +502,7 @@ function reset_installation()
 		'cached',
 		'cached/images',
 		'cached/profilephotos',
-		'log',
-		'config'
+		'log'
 	);
 	$baseDir = determine_museum_now_root(FALSE);
 	foreach ($directoriesToRemove as $directoryToRemove)
@@ -473,6 +514,14 @@ function reset_installation()
 		}
 	}
 	
+	if ($resetProxySettings)
+	{
+		$keysToSetNullAndReset = unserialize(PROXY_SETTINGS_KEYS_SERIALIZED);
+		foreach ($keysToSetNullAndReset as $keyToSetNullAndReset)
+		{
+			set_config($keyToSetNullAndReset, null, PROXY_CONFIG_FILE);
+		}
+	}
 }
 
 /**
@@ -542,11 +591,34 @@ function output_permissions_error()
 				<p>Museum Now needs to be able to write files to your Web Server in order to function correctly. You are most likely receiving this message because it doesn\'t have permission to write files on the server.</p>
 				<p>In order to continue, you will need to grant your Web Server and PHP processes <b>read</b> and <b>write</b> access to the following directories:</p>
 				<ul>
-					<li><code>'.get_url_root().'cron/</code></li>
-					<li><code>'.get_url_root().'get/</code></li>
+					<li><code>'.determine_museum_now_root(FALSE).'</code></li>
+					<li><code>'.determine_museum_now_root(FALSE).'cron/</code></li>
+					<li><code>'.determine_museum_now_root(FALSE).'get/</code></li>
+					<li><code>'.determine_museum_now_root(FALSE).'config/</code></li>
 				</ul>
 				<p>Most likely you will need to use the <code>chmod</code> command or some other tool to manage file permissions on the server.</p>
 				<p><a href="#" class="btn btn-primary btn-lg" role="button" onclick="window.location.reload(true)">OK, I fixed the permissions. Let\'s Go!</a></p>
+			</div>
+		</div>
+	</body>
+			  ';
+	echo $html;
+}
+
+/**
+ * Displays the connectivity permissions error message as HTML 
+ */
+function output_connectivity_error()
+{
+	$html = '
+		<body>
+		<div class="container">
+			<div class="jumbotron">
+				<h1 class="fancy-title">Cannot connect to Instagram.com</h1>
+				<p>Although your server does not need to be visible on the public-facing Internet, it needs to be able to connect to <b>instagram.com</b> in order to function correctly.</p>
+				<p>In order to continue, you will need to install Museum Now on a server that can connect to <b>Instagram.com</b> on the server-side, or configure your server such that it can access the Internet.</p>
+				<p>If your server is sitting behind a proxy, you will need to set the appropriate proxy configuration details in <code>'.determine_museum_now_root(FALSE).'config/proxy.json</code>. Please contact your server or IT administrator for these details</p>
+				<p><a href="#" class="btn btn-primary btn-lg" role="button" onclick="window.location.reload(true)">OK, I fixed that. Let\'s Go!</a></p>
 			</div>
 		</div>
 	</body>
@@ -607,7 +679,8 @@ function permissions_ok()
 {
 	$filePathsToTest = array(
 		realpath(dirname(__FILE__)).'/../cron/',
-		realpath(dirname(__FILE__)).'/../get/'
+		realpath(dirname(__FILE__)).'/../get/',
+		realpath(dirname(__FILE__)).'/../config/'
 	);
 	foreach ($filePathsToTest as $filePathToTest)
 	{
@@ -622,6 +695,163 @@ function permissions_ok()
 		unlink($filePathToTest."test");
 	}
 	return TRUE;
+}
+
+/**
+ * Checks to see if Museum Now can connect to the Instagram API 
+ * @return boolean TRUE if it connect to the Instagram API
+ */
+function connectivity_ok()
+{
+	$httpStatus = null;
+	file_get_contents_via_proxy(INSTAGRAM_WEBSITE, proxy_settings(), $httpStatus);
+	if ($httpStatus == 200)
+	{
+		return TRUE;
+	}
+	else
+	{
+		return FALSE;
+	}
+}
+
+/**
+ * Function that returns user defined proxy settings as defined in 
+ * /config/proxy.json. Proxy settings need to be set if Museum Now operates
+ * behind a firewall and needs to access Instagram via a proxy server. Note
+ * that proxy.json is NOT erased when Museum Now resets.
+ * 
+ * The function returns the relevant key-value pairs from the proxy file if
+ * proxy settings are set, or FALSE if no proxy settings are set.
+ * 
+ * @return boolean|array An array of key-value pairs of proxy settings if set 
+ * within the config file, or FALSE if no proxy settings appear to be set.
+ */
+function proxy_settings()
+{
+	if (file_exists(PROXY_CONFIG_FILE))
+	{
+		$keysToRetrieve = unserialize(PROXY_SETTINGS_KEYS_SERIALIZED);
+		$proxySettings = array();
+		
+		foreach ($keysToRetrieve as $keyToRetrieve)
+		{
+			if ($val = get_config($keyToRetrieve, PROXY_CONFIG_FILE))
+			{
+				if ($keyToRetrieve == 'proxy-server')
+				{
+					if (filter_var($val, FILTER_VALIDATE_URL) !== FALSE)
+					{
+						if (substr($val, -1) == "/")
+						{
+							$val = substr($val, 0, -1);
+						}		
+						$proxySettings[$keyToRetrieve] = $val;
+					}
+				}
+				else if (!empty($val))
+				{
+					$proxySettings[$keyToRetrieve] = $val;
+				}
+			}
+		}
+		
+		// If 'proxy-sever' is defined, but 'proxy-port' isn't, then set the
+		// default port number of 8080
+		if (isset($proxySettings['proxy-server']) && !isset($proxySettings['proxy-port']))
+		{
+			$proxySettings['proxy-port'] = "8080";
+		}
+		
+		if (!empty($proxySettings))
+		{
+			return $proxySettings;
+		}
+		else
+		{
+			return FALSE;
+		}
+	}
+	else
+	{
+		return FALSE;
+	}
+}
+
+/**
+ * Configures a cURL handle for proxy settings (if set)
+ * 
+ * @param resource The cURL handle to configure
+ * 
+ * @param array $proxySettings An array of proxy settings, returned by 
+ * proxy_settings()
+ * 
+ * @return resource The cURL handle, with the proxy settings applied
+ */
+function configure_curl_handle_for_proxy_settings($ch, $proxySettings = array())
+{
+	// Apply proxy settings if set
+	if (isset($proxySettings['proxy-server']) && isset($proxySettings['proxy-port']))
+	{
+		curl_setopt($ch, CURLOPT_PROXY, $proxySettings['proxy-server'].":".$proxySettings['proxy-port']);
+		curl_setopt($ch, CURLOPT_PROXYPORT, $proxySettings['proxy-port']);
+
+		// Add authentication details if proxy-username and proxy-password
+		// are ste
+		if (isset($proxySettings['proxy-username']) && isset($proxySettings['proxy-password']))
+		{
+			curl_setopt($ch, CURLOPT_PROXYUSERPWD, $proxySettings['proxy-username'].":".$proxySettings['proxy-password']);
+		}
+	}
+	return $ch;
+}
+
+/**
+ * Extends PHP's file_get_contents() such that content requests can be made
+ * through a proxy server. Note that this function only works on URLs
+ * 
+ * @param string $url The name of the URL to read.
+ * 
+ * @param mixed $proxySettings An array of proxy settings, returned by 
+ * proxy_settings()
+ * 
+ * @param string $httpStatus Output parameter that returns the HTTP status of
+ * the cURL request
+ * 
+ * @return mixed Returns the read data, or FALSE on failure.
+ */
+function file_get_contents_via_proxy($url, $proxySettings = FALSE, &$httpStatus = null)
+{
+	if (filter_var($url, FILTER_VALIDATE_URL))
+	{
+		$ch = curl_init();
+		curl_setopt($ch, CURLOPT_URL, $url);
+		curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+		
+		if ($proxySettings)
+		{
+			$ch = configure_curl_handle_for_proxy_settings($ch, $proxySettings);
+		}
+
+		$data = curl_exec($ch);
+				
+		// Get HTTP Status. If 200 (OK), then return data, otherwise, return
+		// FALSE
+		$httpStatus = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+		curl_close($ch);
+		if ($httpStatus == 200)
+		{
+			return $data;
+		}
+		else
+		{
+			return FALSE;
+		}
+	}
+	else
+	{
+		return FALSE;
+	}
 }
 
 ?>

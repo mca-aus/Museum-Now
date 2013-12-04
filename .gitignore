@@ -11,3 +11,9 @@ nbproject/project.properties
 nbproject/project.xml
 get/instagram-photos.json
 get/instagram-users.json
+/setup/img/title-card-background-gaussian-blur-6-with-lighting.png
+/setup/img/title-card-background-unblurred-comp.png
+/setup/img/title-card-background-gaussian-blur-6.png
+/setup/img/title-card-background-gaussian-blur-3.png
+/templates/
+/test/proxy.test.php

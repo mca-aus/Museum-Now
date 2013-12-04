@@ -1,5 +1,9 @@
 @import url('../fonts/stylesheet.css');
 
+body, html {
+	height: 100%;
+}
+
 .container {
 	width: 970px !important;
 	margin-bottom: 100px;
@@ -64,6 +68,29 @@ form {
 	margin-bottom: 50px;
 }
 
+.jumbotron {
+	border: 1px solid #dddddd;
+}
+
 .upload-files-btn {
 	margin-left: 135px;
+}
+
+.title-card {
+	background-image: url('../img/title-card-background-gaussian-blur-6-with-lighting.jpg');
+	background-size: cover;
+	background-repeat: no-repeat;
+	background-position: center center;
+}
+
+.title-card .jumbotron {
+	background-color: rgba(240, 240, 240, 0.9);
+}
+
+.title-card h1 {
+	color: #333333;
+}
+
+.title-card p {
+	color: #333333;
 }

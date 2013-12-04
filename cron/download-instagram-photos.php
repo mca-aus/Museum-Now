@@ -55,7 +55,7 @@ foreach ($recentlyUploadedPhotosFromOwnFeedAndLikedPhotos as $photo)
    $photoMetadataToSave[] = format_photo_data_object_for_cached_metadata_storage($photo);
    if (!file_exists($imgURL))
 	{
-		$imgData = file_get_contents($photo->images->standard_resolution->url);
+		$imgData = file_get_contents_via_proxy($photo->images->standard_resolution->url, proxy_settings());
 		$amountOfInstagramPhotosDownloaded++;
 		file_put_contents($imgURL, $imgData);
 	}
@@ -70,7 +70,7 @@ foreach ($userIDsAsKeysProfileImagesAsURLs as $userID => $profileImageURL)
 	$userProfileMetadataToSave[] = (object) array('user_id' => $userID, 'image' => (object) array('src' => '../cached/profilephotos/profilephoto_'.$userID.'.jpg'));
 	if (!file_exists($imgURL))
 	{
-		$imgData = file_get_contents($profileImageURL);
+		$imgData = file_get_contents_via_proxy($profileImageURL, proxy_settings());
 		$amountOfUserProfileImgagesDownloaded++;
 		file_put_contents($imgURL, $imgData);
 	}
@@ -81,14 +81,14 @@ foreach ($userIDsAsKeysProfileImagesAsURLs as $userID => $profileImageURL)
  * /get/instagram-photos.json
  */
 file_put_contents(realpath(dirname(__FILE__).'/../get').'/instagram-photos.json', make_json_pretty(json_encode($photoMetadataToSave)));
-// chmod(realpath(dirname(__FILE__).'/../get').'/instagram-photos.json', 0777);
+@chmod(realpath(dirname(__FILE__).'/../get').'/instagram-photos.json', 0777);
 
 /**
  * Save $userIDsAsKeysCachedProfileImagesAsURLs as cached metadata at
  * /get/instagram-users.json
  */
 file_put_contents(realpath(dirname(__FILE__).'/../get').'/instagram-users.json', make_json_pretty(json_encode($userProfileMetadataToSave)));
-// chmod(realpath(dirname(__FILE__).'/../get').'/instagram-photos.json', 0777);
+@chmod(realpath(dirname(__FILE__).'/../get').'/instagram-photos.json', 0777);
 
 if ($amountOfInstagramPhotosDownloaded > 0)
 {
@@ -173,7 +173,7 @@ function call_instagram_api($endpoint, $accessToken)
 {
    try 
    {
-      return json_decode(file_get_contents($endpoint."?access_token=".$accessToken));
+		return json_decode(file_get_contents_via_proxy($endpoint."?access_token=".$accessToken, proxy_settings()));
    }
    catch (Exception $e)
    {
@@ -224,6 +224,7 @@ function format_photo_data_object_for_cached_metadata_storage($photoDataObject)
 	$photoDataObjectCloned = unserialize(serialize($photoDataObject));
 	$imagePath = '../cached/images/'.get_photo_filename($photoDataObject, 'photo');
 	$photoDataObjectCloned->images->locally_stored = (object) array('url' => $imagePath);
+	$userID = $photoDataObjectCloned->user->id;
 	$photoDataObjectCloned->user->profile_picture_locally_stored = '../cached/profilephotos/profilephoto_'.$userID.'.jpg';
 	return $photoDataObjectCloned;
 }

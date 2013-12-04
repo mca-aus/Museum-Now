@@ -37,14 +37,20 @@ establish_setup_session();
 		output_permissions_error();
 		exit();
 	}
+	
+	if (!connectivity_ok())
+	{
+		output_connectivity_error();
+		exit();
+	}
 
 	?>
-	<body>
+	<body class="title-card">
 		<div class="container">
 			<div class="jumbotron">
 				<h1 class="fancy-title">Museum Now</h1>
 				<p>Museum Now uses Instagram to tell the real time story of your museum, as seen through the eyes of your staff, visitors and collaborators.</p>
-				<p>To continue, you will need to be the administrator of your institution's Instagram account, or at least, know the username and password to log in.</p>
+				<p>To continue, you will need to be the administrator of your institution's Instagram account.</p>
 				<p><a href="../instagram-account-basics/" class="btn btn-primary btn-lg" role="button">Set Up Museum Now</a></p>
 			</div>			
 		</div>

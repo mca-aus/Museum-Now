@@ -65,6 +65,9 @@ if (isset($_GET['code']))
 		 'code' => $code
 	)));
 	
+	// Make sure proxy settings are configured!
+	$ch = configure_curl_handle_for_proxy_settings($ch, proxy_settings());
+	
 	$jsonResponse = curl_exec($ch);
 	curl_close($ch);
 	
