@@ -39,7 +39,7 @@ function loadCachedData()
 {
 	// Load Instagram photos
 	var imageData = [];
-	$.getJSON('../get/instagram-photos.json', {}, function(data) {
+	$.getJSON('../get/instagram-photos.php', {}, function(data) {
 		
 		console.log(data);
 		
@@ -63,7 +63,7 @@ function loadCachedData()
 	
 	// Load and populate Instagram user profile images
 	$('.user-profile-image').remove();
-	$.getJSON('../get/instagram-users.json', {}, function(data) {
+	$.getJSON('../get/instagram-users.php', {}, function(data) {
 		
 		var profileImageURL,
 			 profileUserID,

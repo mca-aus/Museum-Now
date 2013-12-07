@@ -16,14 +16,14 @@ require_once(realpath(dirname(__FILE__).'/../core/core.php'));
 /**
  * Get Instagram account details. 
  */
-$instagramHashtag = get_config('instagram-hashtag');
-$instagramAccountName = get_config('instagram-account-name');
-$instagramAccountURL = get_config('instagram-account-url');
+$instagramHashtag = get_metadata('instagram-hashtag');
+$instagramAccountName = get_metadata('instagram-account-name');
+$instagramAccountURL = get_metadata('instagram-account-url');
 
 /**
  * Get Instagram data from /get/instagram-photos.json 
  */
-$instagramData = json_decode(file_get_contents(realpath(dirname(__FILE__).'/../get/instagram-photos.json')));
+$instagramData = json_decode(file_get_contents(INSTAGRAM_PHOTOS_METADATA_FILE));
 $instagramDataAsShownInFeed = array();
 foreach ($instagramData as $photo)
 {

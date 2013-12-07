@@ -14,8 +14,8 @@
 
 require_once(realpath(dirname(__FILE__).'/../core/core.php'));
 
-// Get number of images in /cached/images/
-$cachedImages = glob(realpath(dirname(__FILE__).'/../cached/images').'/*.jpg');
+// Get number of images in /store/cached/images/
+$cachedImages = glob(INSTAGRAM_PHOTOS_DIR.'/*.jpg');
 $numCachedImages = sizeof($cachedImages);
 
 echo make_json_pretty(json_encode(array('percent-complete' => floor($numCachedImages / AMOUNT_OF_PHOTOS_TO_DOWNLOAD * 100))));

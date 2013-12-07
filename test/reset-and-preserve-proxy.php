@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Returns JSON that provides metadata for the cached Instagram photos.
+ * File for resetting Museum Now but preserves proxy settings
  *
  * Museum Now is a brain-child of the Museum of Contemporary Art Australia,
  * made with much love by Tim Wray and is based on the work of MCA Now,
@@ -11,9 +11,8 @@
  *
  */
 
-header('Content-type: application/json');
 require_once(realpath(dirname(__FILE__).'/../core/core.php'));
 
-echo file_get_contents(INSTAGRAM_PHOTOS_METADATA_FILE);
+reset_installation(FALSE);
 
 ?>

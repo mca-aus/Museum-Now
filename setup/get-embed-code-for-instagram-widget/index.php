@@ -90,7 +90,7 @@ start_instagram_downloader();
 				</form>
 			</div>
 			<div class="col-xs-5">
-				<iframe class="embedded-timeline" src="<?php echo get_config('museum-now-root') ?>instagram-feed/" width="100%" height="600px" frameborder="0"></iframe>
+				<iframe class="embedded-timeline" src="<?php echo get_metadata('museum-now-root') ?>instagram-feed/" width="100%" height="600px" frameborder="0"></iframe>
 			</div>
 		</div>
 	</body>
@@ -115,9 +115,9 @@ start_instagram_downloader();
 		
 		var URLForEmbeddedTimeline = $('.embedded-timeline').attr('src');
 		console.log(URLForEmbeddedTimeline);
-		var iFrameCode = '<iframe src="<?php echo get_config('museum-now-root') ?>instagram-feed/?thm=' + selectedTheme.toLowerCase() + '" width="' + selectedWidth + '" height="' + selectedHeight + '" frameborder="0"></iframe>';
+		var iFrameCode = '<iframe src="<?php echo get_metadata('museum-now-root') ?>instagram-feed/?thm=' + selectedTheme.toLowerCase() + '" width="' + selectedWidth + '" height="' + selectedHeight + '" frameborder="0"></iframe>';
 		$("#iframe-code-text-area").text(iFrameCode);
-		$('.embedded-timeline').attr({'src': '<?php echo get_config('museum-now-root') ?>instagram-feed/?thm=' + selectedTheme.toLowerCase() });
+		$('.embedded-timeline').attr({'src': '<?php echo get_metadata('museum-now-root') ?>instagram-feed/?thm=' + selectedTheme.toLowerCase() });
 	}
 	
 	</script>

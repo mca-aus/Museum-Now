@@ -35,7 +35,7 @@ if (is_running_from_command_line())
  * on the server. Throw an error message and let the user know if we can't save 
  * this file. 
  */
-set_config('museum-now-root', determine_museum_now_root());
+set_metadata('museum-now-root', determine_museum_now_root());
 
 /**
  * Step 2 - Set up Cron jobs by writing to a cron.txt file in cron and using

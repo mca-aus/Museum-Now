@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Returns JSON that provides metadata for the cached Instagram photos.
+ * Test file that reverts custom proxy settings back to their default state
  *
  * Museum Now is a brain-child of the Museum of Contemporary Art Australia,
  * made with much love by Tim Wray and is based on the work of MCA Now,
@@ -11,9 +11,12 @@
  *
  */
 
-header('Content-type: application/json');
 require_once(realpath(dirname(__FILE__).'/../core/core.php'));
 
-echo file_get_contents(INSTAGRAM_PHOTOS_METADATA_FILE);
+set_metadata("proxy-server", "http://proxy.uow.edu.au", PROXY_FILE);
+set_metadata("proxy-port", "8080", PROXY_FILE);
+set_metadata("proxy-username", "twray", PROXY_FILE);
+set_metadata("proxy-password", "bogart10", PROXY_FILE);
 
 ?>
+

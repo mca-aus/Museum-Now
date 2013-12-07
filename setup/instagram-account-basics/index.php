@@ -31,11 +31,11 @@ if (isset($_POST['institution-name']) && isset($_POST['instagram-account-name'])
 {
 	// Save details to config file. TODO: Some better sanity checking,
 	// remove redundant Instagram profile URL field
-	set_config('institution-name', $_POST['institution-name']);
-	set_config('instagram-account-name', $_POST['instagram-account-name']);
-	set_config('instagram-hashtag', $_POST['instagram-hashtag']);
-	set_config('instagram-account-url', $_POST['instagram-account-url']);
-	set_config('digital-sign-ref-url',$_POST['digitalsign-ref-url']);
+	set_metadata('institution-name', $_POST['institution-name']);
+	set_metadata('instagram-account-name', $_POST['instagram-account-name']);
+	set_metadata('instagram-hashtag', $_POST['instagram-hashtag']);
+	set_metadata('instagram-account-url', $_POST['instagram-account-url']);
+	set_metadata('digital-sign-ref-url',$_POST['digitalsign-ref-url']);
 	
 	// If all goes well, then redirect to /instagram-app-registration
 	$redirectURL = determine_museum_now_root(TRUE)."setup/instagram-app-registration";

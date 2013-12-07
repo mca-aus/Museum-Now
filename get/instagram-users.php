@@ -14,6 +14,6 @@
 header('Content-type: application/json');
 require_once(realpath(dirname(__FILE__).'/../core/core.php'));
 
-echo file_get_contents('instagram-users.json');
+echo file_get_contents(INSTAGRAM_USERS_METADATA_FILE);
 
 ?>

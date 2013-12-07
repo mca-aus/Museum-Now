@@ -25,27 +25,29 @@ if(is_running_from_command_line())
 /**
  * Setup is 'complete' - we can mark it as such in the config file 
  */
-set_config('setup-complete', true);
+set_metadata('setup-complete', true);
 
 if (isset($_FILES['banner-image-asset-upload']) && !empty($_FILES['banner-image-asset-upload']['tmp_name']))
 {
-	copy($_FILES['banner-image-asset-upload']['tmp_name'], '../../digitalsign/img/banner-image.png');
+	copy($_FILES['banner-image-asset-upload']['tmp_name'], DIGITALSIGN_ASSETS_DIR.'/banner-image.png');
+	set_metadata('banner-image', DIGITALSIGN_ASSETS_DIR_RELATIVE_TO_DIGITALSIGN.'/banner-image.png', DIGITALSIGN_ASSETS_METADATA_FILE);
 }
 
 if (isset($_FILES['logo-asset-upload']) && !empty($_FILES['logo-asset-upload']['tmp_name']))
 {
-	copy($_FILES['logo-asset-upload']['tmp_name'], '../../digitalsign/img/logo.png');
+	copy($_FILES['logo-asset-upload']['tmp_name'], DIGITALSIGN_ASSETS_DIR.'/logo.png');
+	set_metadata('logo', DIGITALSIGN_ASSETS_DIR_RELATIVE_TO_DIGITALSIGN.'/logo.png', DIGITALSIGN_ASSETS_METADATA_FILE);
 }
 
 if (isset($_POST['theme-select']))
 {
 	if (strtolower($_POST['theme-select']) == 'black')
 	{
-		set_config("digitalsign-bgcolor", "#000000");
+		set_metadata("digitalsign-bgcolor", "#000000");
 	}
 	else if (strtolower($_POST['theme-select']) == 'gunmetal')
 	{
-		set_config("digitalsign-bgcolor", "#333333");
+		set_metadata("digitalsign-bgcolor", "#333333");
 	}
 }
 
@@ -68,7 +70,7 @@ if (isset($_POST['theme-select']))
 		<div class="container">
 			<div class="jumbotron">
 				<h1 class="fancy-title center-text">Your Digital Sign</h1>
-				<p>Here you can customise your digital sign and upload custom branding for it. You can use any display to access your digital sign at <a href="<?php echo get_config('museum-now-root')."digitalsign/" ?>"><?php echo get_config('museum-now-root')."digitalsign/" ?></a></p>
+				<p>Here you can customise your digital sign and upload custom branding for it. You can use any display to access your digital sign at <a href="<?php echo get_metadata('museum-now-root')."digitalsign/" ?>"><?php echo get_metadata('museum-now-root')."digitalsign/" ?></a></p>
 			</div>
 			
 			<div class="digital-sign-container">
@@ -103,8 +105,8 @@ if (isset($_POST['theme-select']))
 						<label class="col-sm-3 control-label">Theme :</label>
 						<div class="col-sm-6">
 							<select class="form-control" id="theme-select" name="theme-select">
-								<option <?php if(get_config("digitalsign-bgcolor") == "#000000") {echo "selected"; } ?>>Black</option>
-								<option <?php if(get_config("digitalsign-bgcolor") == "#333333") {echo "selected"; } ?>>Gunmetal</option>
+								<option <?php if(get_metadata("digitalsign-bgcolor") == "#000000") {echo "selected"; } ?>>Black</option>
+								<option <?php if(get_metadata("digitalsign-bgcolor") == "#333333") {echo "selected"; } ?>>Gunmetal</option>
 							</select>
 						</div>
 					</div>

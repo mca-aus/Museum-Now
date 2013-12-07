@@ -10,18 +10,40 @@
  * Contact: timwray.mail@gmail.com; rorymckay@gmail.com
  */
 
+// Turn this on for debugging!
+error_reporting(E_ALL);
+
 date_default_timezone_set('Australia/Sydney');
-define('GENERAL_CONFIG_FILE', realpath(dirname(__FILE__)).'/../config/config.json');
-define('PROXY_CONFIG_FILE', realpath(dirname(__FILE__)).'/../config/proxy.json');
 define('PROXY_SETTINGS_KEYS_SERIALIZED', serialize(array('proxy-server', 'proxy-port', 'proxy-username', 'proxy-password')));
 define('INSTAGRAM_WEBSITE', "http://instagram.com/");
 define('PHOTOS_FROM_OWN_FEED_API_ENDPOINT', 'https://api.instagram.com/v1/users/self/media/recent');
 define('LIKED_PHOTOS_API_ENDPOINT', 'https://api.instagram.com/v1/users/self/media/liked');
 define('AMOUNT_OF_PHOTOS_TO_DOWNLOAD', '16');
 
+// Define file locations
+define('ROOT_DIR', realpath(dirname(__FILE__)."/../"));
+define('STORE_DIR', realpath(dirname(__FILE__)."/../store/"));
+define('CONFIG_DIR', realpath(dirname(__FILE__)."/../store/config/"));
+define('CONFIG_FILE', realpath(dirname(__FILE__)."/../store/config")."/config.json");
+define('PROXY_FILE', realpath(dirname(__FILE__)."/../store/config")."/proxy.json");
+define('DOWNLOAD_INSTAGRAM_PHOTOS_SCHEDULER_SHELL_SCRIPT', realpath(dirname(__FILE__)."/../store/config")."/download-instagram-photos-scheduler.sh");
+define('DOWNLOAD_INSTAGRAM_PHOTOS_SCHEDULER_PID', realpath(dirname(__FILE__)."/../store/config")."/download-instagram-photos-scheduler.pid");
+define('LOG_FILE', realpath(dirname(__FILE__)."/../store/config")."/log.json");
+define('DIGITALSIGN_ASSETS_DIR', realpath(dirname(__FILE__)."/../store/digitalsign-assets/"));
+define('DIGITALSIGN_ASSETS_DIR_RELATIVE_TO_DIGITALSIGN', "../store/digitalsign-assets");
+define('DIGITALSIGN_ASSETS_METADATA_FILE', realpath(dirname(__FILE__)."/../store/digitalsign-assets")."/metadata.json");
+define('CACHED_DIR', realpath(dirname(__FILE__)."/../store/cached/"));
+define('CACHED_DIR_RELATIVE_TO_DIGITALSIGN', "../store/cached");
+define('INSTAGRAM_PHOTOS_DIR', realpath(dirname(__FILE__)."/../store/cached/instagram-photos/"));
+define('INSTAGRAM_PHOTOS_DIR_RELATIVE_TO_DIGITALSIGN', "../store/cached/instagram-photos");
+define('INSTAGRAM_PHOTOS_METADATA_FILE', realpath(dirname(__FILE__)."/../store/cached/instagram-photos")."/metadata.json");
+define('INSTAGRAM_USERS_DIR', realpath(dirname(__FILE__)."/../store/cached/instagram-users/"));
+define('INSTAGRAM_USERS_DIR_RELATIVE_TO_DIGITALSIGN', "../store/cached/instagram-users");
+define('INSTAGRAM_USERS_METADATA_FILE', realpath(dirname(__FILE__)."/../store/cached/instagram-users")."/metadata.json");
+
 /**
  * All pages / sections on Museum Now redirect to the setup page if Museum
- * Now is not installed (i.e., config/config.json is not there). 
+ * Now is not installed (i.e., /store/config/config.json is not there). 
  */
 redirect_to_setup_page_if_not_installed();
 
@@ -165,7 +187,7 @@ function determine_museum_now_root($getRootURL = TRUE)
 		// Determine the name of the Museum Now directory
 		$rootDirectoryInFileSystem = realpath(dirname(__FILE__).'/../');
 		$rootDirectoryInFileSystemComponents = explode("/", $rootDirectoryInFileSystem);
-		$fileSystemFolderName = strtolower(array_pop($rootDirectoryInFileSystemComponents));
+		$fileSystemFolderName = array_pop($rootDirectoryInFileSystemComponents);
 		
 		// Determine the document root on the server
 		$pathOnServer = $_SERVER['PHP_SELF'];
@@ -204,7 +226,7 @@ function determine_museum_now_root($getRootURL = TRUE)
  */
 function get_url_root()
 {
-	if ($root = get_config('museum-now-root'))
+	if ($root = get_metadata('museum-now-root'))
 	{
 		return $root;
 	}
@@ -238,7 +260,7 @@ function get_absolute_path_of_museum_now_folder()
  */
 function museum_now_is_installed()
 {
-	if (file_exists(GENERAL_CONFIG_FILE))
+	if (get_metadata('museum-now-root'))
 	{
 		return TRUE;
 	}
@@ -261,31 +283,11 @@ function log_message($message)
       echo $message."\r\n";
    }
 	
-	// Modify HTML log file
-	
-   $fileLines = array();
-   // Open log file if it exists
-   if (file_exists(realpath(dirname(__FILE__))."/../log/index.html"))
-   {
-      $logFileContents = file_get_contents(realpath(dirname(__FILE__))."/../log/index.html");
-      $fileLines = explode("<br />", $logFileContents);
-      
-      // Get first 19 lines of that file
-      $fileLines = array_splice($fileLines, 0, 19);
-   }
-   
-   // Create the log message, write it to file
-   $logMessage = "<strong>".date('l jS \of F Y h:i:s A')."</strong>\t\t".$message;
-   array_unshift($fileLines, $logMessage);
-   $updatedFileData = implode("<br />", $fileLines);
-   
-	file_put_contents(realpath(dirname(__FILE__))."/../log/index.html", $updatedFileData);
-	
 	// Open JSON log file if it exists
 	$logJSON = array();
-	if (file_exists(realpath(dirname(__FILE__))."/../log/log.json"))
+	if (file_exists(LOG_FILE))
 	{
-		$logJSON = json_decode(file_get_contents(realpath(dirname(__FILE__))."/../log/log.json"));
+		$logJSON = json_decode(file_get_contents(LOG_FILE));
 	}
 	if (empty($logJSON))
 	{
@@ -299,8 +301,9 @@ function log_message($message)
 	// Only store 20 last logged items in $logJSON
 	$logJSONTruncated = array_splice($logJSON, 0, 20);
 	
-	// Store $logJSON as prettified JSON in /../log/log.json
-	file_put_contents(realpath(dirname(__FILE__))."/../log/log.json", make_json_pretty(json_encode($logJSONTruncated)))	;
+	// Store $logJSON as prettified JSON in /store/config/log.json
+	file_put_contents(LOG_FILE, make_json_pretty(json_encode($logJSONTruncated)));
+	@chmod(LOG_FILE, 0777);
 }
 
 /**
@@ -315,20 +318,20 @@ function is_running_from_command_line()
 }
 
 /**
- * Retrieves a value from a configuration file for a given key. By default,
+ * Retrieves a value from a metadata file for a given key. By default,
  * it retrieves key-value pairs from the general configuration file
- * (GENERAL_CONFIG_FILE) although it can optionally retrieve / set key value
- * pairs from other config files as well. 
+ * (CONFIG_FILE) although it can optionally retrieve / set key value
+ * pairs from other metadata files as well. 
  * 
  * @param string $key The key to retrieve the value for.
  * 
- * @param string $configFile The full file path of the config to set / get
- * keys from, defaults to GENERAL_CONFIG_FILE
+ * @param string $configFile The full file path of the metadata file to set / get
+ * keys from, defaults to CONFIG_FILE
  * 
  * @return string The value for the given key, or FALSE if the value doesn't
  * exist.
  */
-function get_config($key, $configFile = GENERAL_CONFIG_FILE)
+function get_metadata($key, $configFile = CONFIG_FILE)
 {
 	if (file_exists($configFile))
 	{
@@ -356,12 +359,12 @@ function get_config($key, $configFile = GENERAL_CONFIG_FILE)
  * @param string $val The accompanying value.
  * 
  * @param string $configFile The full file path of the config to set / get
- * keys from, defaults to GENERAL_CONFIG_FILE
+ * keys from, defaults to CONFIG_FILE
  * 
- * @return int The number of bytes written to /config/config.json, or 
+ * @return int The number of bytes written to /store/config/config.json, or 
  * boolean FALSE on failure.
  */
-function set_config($key, $val, $configFile = GENERAL_CONFIG_FILE)
+function set_metadata($key, $val, $configFile = CONFIG_FILE)
 {
 	if(file_exists($configFile))
 	{
@@ -387,8 +390,7 @@ function start_instagram_downloader()
 	$absolutePathOfPHP = PHP_BINDIR."/php";
 	$absolutePathOfCronDirectory = realpath(dirname(__FILE__)."/../cron/");
 	$absolutePathOfDownloadInstagramPhotosPHPScript = $absolutePathOfCronDirectory."/download-instagram-photos.php";
-	$absolutePathOfScheduleFile = $absolutePathOfCronDirectory."/download-instagram-photos-scheduler.sh";
-	$absolutePathOfSchedulingProcessPIDFile = $absolutePathOfCronDirectory."/download-instagram-photos-scheduler-pid.dat"; 
+	// $absolutePathOfSchedulingProcessPIDFile = $absolutePathOfCronDirectory."/download-instagram-photos-scheduler-pid.dat"; 
 	
 	// If there's an Instagram scheduler currently running (by virtue of the fact
 	// that download-instagram-photos-scheduler-pid.dat exists and contains a
@@ -403,11 +405,11 @@ function start_instagram_downloader()
 		{$absolutePathOfPHP} {$absolutePathOfDownloadInstagramPhotosPHPScript}
 	   sleep 60
 	done";
+		
+	file_put_contents(DOWNLOAD_INSTAGRAM_PHOTOS_SCHEDULER_SHELL_SCRIPT, $scheduleFileContents);
+	@chmod(DOWNLOAD_INSTAGRAM_PHOTOS_SCHEDULER_SHELL_SCRIPT, 0777);
 
-	file_put_contents($absolutePathOfScheduleFile, $scheduleFileContents);
-	chmod($absolutePathOfScheduleFile, 0777);
-
-	$commandToExecute = "{$absolutePathOfScheduleFile} >> {$absolutePathOfSchedulingProcessPIDFile} 2>&1 &";
+	$commandToExecute = DOWNLOAD_INSTAGRAM_PHOTOS_SCHEDULER_SHELL_SCRIPT." >> ".DOWNLOAD_INSTAGRAM_PHOTOS_SCHEDULER_PID." 2>&1 &";
 	$outputForShellScriptInitialisationCommand = array();
 	$outputForShellScriptInitialisationCommand = shell_exec($commandToExecute);
 }
@@ -419,15 +421,19 @@ function start_instagram_downloader()
  */
 function stop_instagram_downloader()
 {
-	$absolutePathOfCronDirectory = realpath(dirname(__FILE__)."/../cron/");
-	$absolutePathOfSchedulingProcessPIDFile = $absolutePathOfCronDirectory."/download-instagram-photos-scheduler-pid.dat"; 
-	
-	if (file_exists($absolutePathOfSchedulingProcessPIDFile))
+	if (file_exists(DOWNLOAD_INSTAGRAM_PHOTOS_SCHEDULER_PID))
 	{
-		$currentlyRunningSchedulingProcessPID = file_get_contents($absolutePathOfSchedulingProcessPIDFile);
-		exec("kill {$currentlyRunningSchedulingProcessPID}");
-		unlink($absolutePathOfSchedulingProcessPIDFile);
-		return TRUE;
+		$currentlyRunningSchedulingProcessPID = file_get_contents(DOWNLOAD_INSTAGRAM_PHOTOS_SCHEDULER_PID);
+		if (is_numeric(trim($currentlyRunningSchedulingProcessPID)))
+		{
+			exec("kill {$currentlyRunningSchedulingProcessPID}");
+			file_put_contents(DOWNLOAD_INSTAGRAM_PHOTOS_SCHEDULER_PID, "");
+			return TRUE;
+		}
+		else
+		{
+			return FALSE;
+		}
 	}
 	else
 	{
@@ -436,45 +442,16 @@ function stop_instagram_downloader()
 }
 
 /**
- * Creates the empty directory structures Museum Now needs to run. These include
- * - /cached/images
- * - /cached/profilephotos
- * - /log 
- * - /config (if it doesn't exist)
- */
-function create_file_structures_for_museum_now()
-{
-	$directoriesToCreate = array(
-		'cached',
-		'cached/images',
-		'cached/profilephotos',
-		'log'
-	);
-	$baseDir = determine_museum_now_root(FALSE);
-	
-	foreach ($directoriesToCreate as $directoryToCreate)
-	{
-		$fullPathOfDirectoryToCreate = $baseDir.$directoryToCreate;
-		if (!file_exists($fullPathOfDirectoryToCreate))
-		{
-			mkdir($fullPathOfDirectoryToCreate);
-		}
-	}
-}
-
-/**
  * Resets the Museum Now installation 
  * 
  * @param boolean $resetProxySettings If set to FALSE, proxy settings defined
- * in /config/proxy.json are NOT reset (by default, proxy settings are reset).
+ * in /store/config/proxy.json are NOT reset (by default, proxy settings are reset).
  */
 function reset_installation($resetProxySettings = TRUE)
 {
 	stop_instagram_downloader();
-	@unlink(realpath(dirname(__FILE__)."/../config/config.json"));
-	
-	$pathOfCachedImagesDirectory = realpath(dirname(__FILE__).'/../cached');
-	$pathOfDigitalSignImagesDirectory = realpath(dirname(__FILE__).'/../digitalsign/img');
+	$pathOfCachedImagesDirectory = CACHED_DIR;
+	$pathOfDigitalSignImagesDirectory = DIGITALSIGN_ASSETS_DIR;
 	
 	if (file_exists($pathOfCachedImagesDirectory))
 	{
@@ -492,34 +469,17 @@ function reset_installation($resetProxySettings = TRUE)
 			unlink($imageToDelete);
 		}
 	}
-	file_put_contents(realpath(dirname(__FILE__)."/../get/instagram-photos.json"), make_json_pretty(json_encode(array())));
-	file_put_contents(realpath(dirname(__FILE__)."/../get/instagram-users.json"), make_json_pretty(json_encode(array())));
-	@unlink(realpath(dirname(__FILE__)."/../cron/download-instagram-photos-scheduler.sh"));
-	@unlink(realpath(dirname(__FILE__)."/../cron/download-instagram-photos-scheduler-pid.dat"));
-	
-	// Delete /cached/images; /cached/profilephotos and /log 
-	$directoriesToRemove = array(
-		'cached',
-		'cached/images',
-		'cached/profilephotos',
-		'log'
-	);
-	$baseDir = determine_museum_now_root(FALSE);
-	foreach ($directoriesToRemove as $directoryToRemove)
-	{
-		$fullPathOfDirectoryToRemove = $baseDir.$directoryToRemove;
-		if (file_exists($fullPathOfDirectoryToRemove))
-		{
-			rrmdir($fullPathOfDirectoryToRemove);
-		}
-	}
-	
+	file_put_contents(CONFIG_FILE, make_json_pretty(json_encode((object) array())));
+	file_put_contents(LOG_FILE, make_json_pretty(json_encode(array())));
+	file_put_contents(INSTAGRAM_PHOTOS_METADATA_FILE, make_json_pretty(json_encode(array())));
+	file_put_contents(INSTAGRAM_USERS_METADATA_FILE, make_json_pretty(json_encode(array())));
+
 	if ($resetProxySettings)
 	{
 		$keysToSetNullAndReset = unserialize(PROXY_SETTINGS_KEYS_SERIALIZED);
 		foreach ($keysToSetNullAndReset as $keyToSetNullAndReset)
 		{
-			set_config($keyToSetNullAndReset, null, PROXY_CONFIG_FILE);
+			set_metadata($keyToSetNullAndReset, null, PROXY_FILE);
 		}
 	}
 }
@@ -560,9 +520,6 @@ function output_setup_html_head()
 
 						<!-- Custom styles -->
 						<link href="../css/style.css" rel="stylesheet">
-
-						<!-- Just for debugging purposes. Don\'t actually copy this line! -->
-						<!--[if lt IE 9]><script src="../../docs-assets/js/ie8-responsive-file-warning.js"></script><![endif]-->
 						
 						<!-- jQuery! -->
 						<script src="//ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js" ></script>
@@ -579,23 +536,45 @@ function output_setup_html_head()
 }
 
 /**
- * Displays the file permissions error message as HTML 
+ * Displays the file permissions error message as a HTML page 
  */
 function output_permissions_error()
 {
 	$html = '
-		<body>
+	<head>
+		<meta charset="utf-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<meta name="description" content="">
+		<meta name="author" content="">
+
+		<title>Museum Now - Installation</title>
+
+		<!-- Bootstrap core CSS -->
+		<link href="css/bootstrap.css" rel="stylesheet">
+		<!-- Bootstrap theme -->
+		<link href="css/bootstrap-theme.min.css" rel="stylesheet">
+
+		<!-- Custom styles -->
+		<link href="css/style.css" rel="stylesheet">
+
+		<!-- jQuery! -->
+		<script src="//ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js" ></script>
+		<script src="js/script.js" ></script>
+
+		<!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
+		<!--[if lt IE 9]>
+		<script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+		<script src="https://oss.maxcdn.com/libs/respond.js/1.3.0/respond.min.js"></script>
+		<![endif]-->
+	</head>	
+	<body>
 		<div class="container">
 			<div class="jumbotron">
 				<h1 class="fancy-title">Museum Now needs your permission!</h1>
 				<p>Museum Now needs to be able to write files to your Web Server in order to function correctly. You are most likely receiving this message because it doesn\'t have permission to write files on the server.</p>
 				<p>In order to continue, you will need to grant your Web Server and PHP processes <b>read</b> and <b>write</b> access to the following directories:</p>
-				<ul>
-					<li><code>'.determine_museum_now_root(FALSE).'</code></li>
-					<li><code>'.determine_museum_now_root(FALSE).'cron/</code></li>
-					<li><code>'.determine_museum_now_root(FALSE).'get/</code></li>
-					<li><code>'.determine_museum_now_root(FALSE).'config/</code></li>
-				</ul>
+				<p><code>'.STORE_DIR.'</code></p>
 				<p>Most likely you will need to use the <code>chmod</code> command or some other tool to manage file permissions on the server.</p>
 				<p><a href="#" class="btn btn-primary btn-lg" role="button" onclick="window.location.reload(true)">OK, I fixed the permissions. Let\'s Go!</a></p>
 			</div>
@@ -615,9 +594,8 @@ function output_connectivity_error()
 		<div class="container">
 			<div class="jumbotron">
 				<h1 class="fancy-title">Cannot connect to Instagram.com</h1>
-				<p>Although your server does not need to be visible on the public-facing Internet, it needs to be able to connect to <b>instagram.com</b> in order to function correctly.</p>
 				<p>In order to continue, you will need to install Museum Now on a server that can connect to <b>Instagram.com</b> on the server-side, or configure your server such that it can access the Internet.</p>
-				<p>If your server is sitting behind a proxy, you will need to set the appropriate proxy configuration details in <code>'.determine_museum_now_root(FALSE).'config/proxy.json</code>. Please contact your server or IT administrator for these details</p>
+				<p>If your server is sitting behind a proxy, you will need to set the appropriate proxy configuration details in <code>'.PROXY_FILE.'</code>. Please contact your server or IT administrator for these details</p>
 				<p><a href="#" class="btn btn-primary btn-lg" role="button" onclick="window.location.reload(true)">OK, I fixed that. Let\'s Go!</a></p>
 			</div>
 		</div>
@@ -678,21 +656,23 @@ function go_to_tutorial_introduction_if_not_in_setup_session()
 function permissions_ok()
 {
 	$filePathsToTest = array(
-		realpath(dirname(__FILE__)).'/../cron/',
-		realpath(dirname(__FILE__)).'/../get/',
-		realpath(dirname(__FILE__)).'/../config/'
+		 STORE_DIR,
+		 CONFIG_DIR,
+		 INSTAGRAM_PHOTOS_DIR,
+		 INSTAGRAM_USERS_DIR
 	);
+	
 	foreach ($filePathsToTest as $filePathToTest)
 	{
-		if(!@file_put_contents($filePathToTest."test", "test"))
+		if(@!file_put_contents($filePathToTest."/test", "test"))
 		{
 			return FALSE;
 		}
-		if (@!file_get_contents($filePathToTest."test"))
+		if (@!file_get_contents($filePathToTest."/test"))
 		{
 			return FALSE;
 		}
-		unlink($filePathToTest."test");
+		unlink($filePathToTest."/test");
 	}
 	return TRUE;
 }
@@ -717,7 +697,7 @@ function connectivity_ok()
 
 /**
  * Function that returns user defined proxy settings as defined in 
- * /config/proxy.json. Proxy settings need to be set if Museum Now operates
+ * /store/config/proxy.json. Proxy settings need to be set if Museum Now operates
  * behind a firewall and needs to access Instagram via a proxy server. Note
  * that proxy.json is NOT erased when Museum Now resets.
  * 
@@ -729,14 +709,14 @@ function connectivity_ok()
  */
 function proxy_settings()
 {
-	if (file_exists(PROXY_CONFIG_FILE))
+	if (file_exists(PROXY_FILE))
 	{
 		$keysToRetrieve = unserialize(PROXY_SETTINGS_KEYS_SERIALIZED);
 		$proxySettings = array();
 		
 		foreach ($keysToRetrieve as $keyToRetrieve)
 		{
-			if ($val = get_config($keyToRetrieve, PROXY_CONFIG_FILE))
+			if ($val = get_metadata($keyToRetrieve, PROXY_FILE))
 			{
 				if ($keyToRetrieve == 'proxy-server')
 				{

@@ -22,10 +22,10 @@ require_once(realpath(dirname(__FILE__).'/../core/core.php'));
  * Download photos from Instagram
  */
 
-$APIData = call_instagram_api(PHOTOS_FROM_OWN_FEED_API_ENDPOINT, get_config('instagram-access-token'));
+$APIData = call_instagram_api(PHOTOS_FROM_OWN_FEED_API_ENDPOINT, get_metadata('instagram-access-token'));
 $APIResponseCodeForPhotosFromOwnFeedCall = $APIData->meta->code;
 $photosFromOwnFeed = $APIData->data;
-$APIData = call_instagram_api(LIKED_PHOTOS_API_ENDPOINT, get_config('instagram-access-token'));
+$APIData = call_instagram_api(LIKED_PHOTOS_API_ENDPOINT, get_metadata('instagram-access-token'));
 $APIResponseCodeForForLikedPhotos = $APIData->meta->code;
 $likedPhotos = $APIData->data;
 
@@ -46,49 +46,51 @@ $amountOfInstagramPhotosDownloaded = 0;
 $amountOfUserProfileImgagesDownloaded = 0;
 
 /**
- * Cache Instagram photo images into /cached/images 
+ * Cache Instagram photo images into /store/cached/instagram-photos/
  */
 foreach ($recentlyUploadedPhotosFromOwnFeedAndLikedPhotos as $photo)
 {
 	$userIDsAsKeysProfileImagesAsURLs[$photo->user->id] = $photo->user->profile_picture;
-   $imgURL = realpath(dirname(__FILE__).'/../cached/images').'/'.get_photo_filename($photo, 'photo');
+   $imgURL = INSTAGRAM_PHOTOS_DIR.'/'.get_photo_filename($photo, 'photo');
    $photoMetadataToSave[] = format_photo_data_object_for_cached_metadata_storage($photo);
    if (!file_exists($imgURL))
 	{
 		$imgData = file_get_contents_via_proxy($photo->images->standard_resolution->url, proxy_settings());
 		$amountOfInstagramPhotosDownloaded++;
 		file_put_contents($imgURL, $imgData);
+		@chmod($imgURL, 0777);
 	}
 }
 
 /**
- * Cache Instagram user profile images into /cached/profilephotos
+ * Cache Instagram user profile images into /cached/profilephotos/
  */
 foreach ($userIDsAsKeysProfileImagesAsURLs as $userID => $profileImageURL)
 {
-	$imgURL = realpath(dirname(__FILE__).'/../cached/profilephotos').'/profilephoto_'.$userID.'.jpg';
-	$userProfileMetadataToSave[] = (object) array('user_id' => $userID, 'image' => (object) array('src' => '../cached/profilephotos/profilephoto_'.$userID.'.jpg'));
+	$imgURL = INSTAGRAM_USERS_DIR.'/profilephoto_'.$userID.'.jpg';
+	$userProfileMetadataToSave[] = (object) array('user_id' => $userID, 'image' => (object) array('src' => INSTAGRAM_USERS_DIR_RELATIVE_TO_DIGITALSIGN.'/profilephoto_'.$userID.'.jpg'));
 	if (!file_exists($imgURL))
 	{
 		$imgData = file_get_contents_via_proxy($profileImageURL, proxy_settings());
 		$amountOfUserProfileImgagesDownloaded++;
 		file_put_contents($imgURL, $imgData);
+		@chmod($imgURL, 0777);
 	}
 }
 
 /**
  * Save $recentlyUploadedPhotosFromOwnFeedAndLikedPhotos as cached metadata at
- * /get/instagram-photos.json
+ * /store/instagram-photos/metadata.json
  */
-file_put_contents(realpath(dirname(__FILE__).'/../get').'/instagram-photos.json', make_json_pretty(json_encode($photoMetadataToSave)));
-@chmod(realpath(dirname(__FILE__).'/../get').'/instagram-photos.json', 0777);
+file_put_contents(INSTAGRAM_PHOTOS_METADATA_FILE, make_json_pretty(json_encode($photoMetadataToSave)));
+@chmod(INSTAGRAM_PHOTOS_METADATA_FILE, 0777);
 
 /**
  * Save $userIDsAsKeysCachedProfileImagesAsURLs as cached metadata at
  * /get/instagram-users.json
  */
-file_put_contents(realpath(dirname(__FILE__).'/../get').'/instagram-users.json', make_json_pretty(json_encode($userProfileMetadataToSave)));
-@chmod(realpath(dirname(__FILE__).'/../get').'/instagram-photos.json', 0777);
+file_put_contents(INSTAGRAM_USERS_METADATA_FILE, make_json_pretty(json_encode($userProfileMetadataToSave)));
+@chmod(INSTAGRAM_USERS_METADATA_FILE, 0777);
 
 if ($amountOfInstagramPhotosDownloaded > 0)
 {
@@ -103,7 +105,7 @@ if ($amountOfInstagramPhotosDownloaded > 0)
 }
 
 /**
- * 'Cleans up' / removes any photos in the /cached directories that are not
+ * 'Cleans up' / removes any photos in the /store/cached directories that are not
  *  present in $photoMetadataToSave and $userProfileMetadataToSave. This is 
  *  to prevent the server getting clogged up with photos downloaded from 
  *  Instagram.
@@ -125,14 +127,13 @@ $imageFileNamesToRetain = array_merge($imageFilePathsForImagesCurrentlyDisplayed
 
 // Need to convert relative paths in $imageFileNamesToRetain to full,
 // absolute paths
-$absolutePathOfCacheDirectory = realpath(dirname(__FILE__).'/../cached/');
 $imageFileNamesToRetainAsFullPaths = array();
 foreach ($imageFileNamesToRetain as $imageFileNameToRetain)
 {
-	$imageFileNamesToRetainAsFullPaths[] = str_replace('../cached', $absolutePathOfCacheDirectory, $imageFileNameToRetain);
+	$imageFileNamesToRetainAsFullPaths[] = str_replace(CACHED_DIR_RELATIVE_TO_DIGITALSIGN, CACHED_DIR, $imageFileNameToRetain);
 }
 
-$imageFilePathsInCacheDirectory = rglob(realpath(dirname(__FILE__).'/../cached').'/*.jpg');
+$imageFilePathsInCacheDirectory = rglob(CACHED_DIR.'/*.jpg');
 $imagesToDelete = array_diff($imageFilePathsInCacheDirectory, $imageFileNamesToRetainAsFullPaths);
 
 foreach ($imagesToDelete as $imageToDelete)
@@ -216,16 +217,16 @@ function instagram_photo_sort_by_created_time_desc($photo1, $photo2)
  * from the Instagram API.
  * 
  * @return array The modified photo data object, to be stored locally in
- * /get/photo-metadata.json
+ * /store/instagram-photos/metadata.json
  */
 function format_photo_data_object_for_cached_metadata_storage($photoDataObject)
 {
 	// Clone $photoDataObject
 	$photoDataObjectCloned = unserialize(serialize($photoDataObject));
-	$imagePath = '../cached/images/'.get_photo_filename($photoDataObject, 'photo');
+	$imagePath = INSTAGRAM_PHOTOS_DIR_RELATIVE_TO_DIGITALSIGN.'/'.get_photo_filename($photoDataObject, 'photo');
 	$photoDataObjectCloned->images->locally_stored = (object) array('url' => $imagePath);
 	$userID = $photoDataObjectCloned->user->id;
-	$photoDataObjectCloned->user->profile_picture_locally_stored = '../cached/profilephotos/profilephoto_'.$userID.'.jpg';
+	$photoDataObjectCloned->user->profile_picture_locally_stored = INSTAGRAM_USERS_DIR_RELATIVE_TO_DIGITALSIGN.'/profilephoto_'.$userID.'.jpg';
 	return $photoDataObjectCloned;
 }
 

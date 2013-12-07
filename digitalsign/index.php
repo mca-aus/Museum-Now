@@ -16,9 +16,9 @@ require_once(realpath(dirname(__FILE__).'/../core/core.php'));
  * Load text content from configuration files 
  */
 $textContent = array(
-	'banner' => get_config('institution-name'),
-	'ref-url' => get_config('digital-sign-ref-url'),
-	'hashtag' => get_config('instagram-hashtag')
+	'banner' => get_metadata('institution-name'),
+	'ref-url' => get_metadata('digital-sign-ref-url'),
+	'hashtag' => get_metadata('instagram-hashtag')
 );
 
 /**
@@ -33,17 +33,14 @@ $imagePlaceholders = array(
 	'more-info' => null
 );
 
-$imagePathsInImageDirectory = glob('img/{*.jpg,*.png,*.gif}', GLOB_BRACE);
-$imageFilenamesInImageDirectory = array();
-foreach ($imagePathsInImageDirectory as $imagePath)
+$imagePlaceholderKeys = array_keys($imagePlaceholders);
+
+foreach ($imagePlaceholderKeys as $imagePlaceholderKey)
 {
-	$imagePathComponents = explode('/', $imagePath);
-	$imageFilename = array_pop($imagePathComponents);
-	$imageFilenameComponents = explode('.', $imageFilename);
-	$imageFilenameWithoutExtension = array_shift($imageFilenameComponents);
-	if (array_key_exists(strtolower($imageFilenameWithoutExtension), $imagePlaceholders))
+	$imgURL = get_metadata($imagePlaceholderKey, DIGITALSIGN_ASSETS_METADATA_FILE);
+	if ($imgURL)
 	{
-		$imagePlaceholders[strtolower($imageFilenameWithoutExtension)] = $imageFilename;
+		$imagePlaceholders[$imagePlaceholderKey] = get_metadata($imagePlaceholderKey, DIGITALSIGN_ASSETS_METADATA_FILE);
 	}
 }
 
@@ -53,18 +50,17 @@ foreach ($imagePathsInImageDirectory as $imagePath)
 <head>
    <title>Digital Signage</title>
    <script type="text/javascript" src="scripts/jquery.1.7.1.min.js"></script>
-   <script type="text/javascript" src="scripts/jquery.easing.1.3.js"></script>	
-   <script type="text/javascript" src="scripts/script.js"></script>
+   <script type="text/javascript" src="scripts/jquery.easing.1.3.js"></script>		
+	<script type="text/javascript" src="scripts/script.js"></script>
 	<link rel="stylesheet" type="text/css" href="style.css">
 	<meta name="apple-mobile-web-app-capable" content="yes">
 	<meta name="apple-mobile-web-app-status-bar-style" content="translucent-black">
 	<meta name="viewport" content="width=device-width,initial-scale=1.0,user-scalable=no">
 </head>
-
-<body <?php if(get_config('digitalsign-bgcolor')) { echo 'style="background-color: '.get_config('digitalsign-bgcolor').'"'; } ?>>
+<body <?php if(get_metadata('digitalsign-bgcolor')) { echo 'style="background-color: '.get_metadata('digitalsign-bgcolor').'"'; } ?>>
    <div class="container">
       <header class="banner">
-         <div class="header" <?php if(!empty($imagePlaceholders['banner-image'])) { echo 'style="background-image: url(\'img/'.$imagePlaceholders['banner-image'].'\')"'; } ?>>
+         <div class="header" <?php if(!empty($imagePlaceholders['banner-image'])) { echo 'style="background-image: url(\''.$imagePlaceholders['banner-image'].'\')"'; } ?>>
 			<?php 
 			
 			if (empty($imagePlaceholders['banner-image']))
@@ -81,7 +77,7 @@ foreach ($imagePathsInImageDirectory as $imagePath)
 			
 			?>
 			</div>
-         <div class="logo" <?php if(!empty($imagePlaceholders['logo'])) { echo 'style="background-image: url(\'img/'.$imagePlaceholders['logo'].'\')"'; } ?>>
+         <div class="logo" <?php if(!empty($imagePlaceholders['logo'])) { echo 'style="background-image: url(\''.$imagePlaceholders['logo'].'\')"'; } ?>>
 			</div>
       </header>
       <div class="instagram-photo-area">

@@ -6,7 +6,6 @@ test/test.php
 /cached/
 /cron/download-instagram-photos-scheduler-pid.dat
 /cron/download-instagram-photos-scheduler.sh
-/log/
 nbproject/project.properties
 nbproject/project.xml
 get/instagram-photos.json
@@ -17,3 +16,10 @@ get/instagram-users.json
 /setup/img/title-card-background-gaussian-blur-3.png
 /templates/
 /test/proxy.test.php
+/test/permissions.test.php
+/test/realpath.test.php
+/test/permissions-set.sh
+/test/permissions-reset.sh
+/test/output-permissions-error-test.php
+/test/proxy-settings-set.test.php
+/test/proxy-settings-unset.test.php
