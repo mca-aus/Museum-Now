@@ -19,6 +19,22 @@
 require_once(realpath(dirname(__FILE__).'/../core/core.php'));
 
 /**
+ * Disable error reporting when run from a browser / Web API call
+ * at least for production version of Museum Now
+ * so that error outputs don't interfere with JSON response
+ */
+if (!is_running_from_command_line())
+{
+	error_reporting(0);
+}
+
+/**
+ * Increased maximum execution time to 5 minutes to allow for potentially long
+ * operation of downloading photos from the Instagram stream. 
+ */
+ini_set('max_execution_time', 600);
+
+/**
  * Download photos from Instagram
  */
 

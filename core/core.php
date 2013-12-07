@@ -192,7 +192,7 @@ function determine_museum_now_root($getRootURL = TRUE)
 		// Determine the document root on the server
 		$pathOnServer = $_SERVER['PHP_SELF'];
 		$currentPath = null;
-		while (strtolower($currentPath) !=  $fileSystemFolderName)
+		while ($currentPath !=  $fileSystemFolderName)
 		{
 			$pathOnServerComponents = explode("/", $pathOnServer);
 			$currentPath = array_pop($pathOnServerComponents);
@@ -473,7 +473,9 @@ function reset_installation($resetProxySettings = TRUE)
 	file_put_contents(LOG_FILE, make_json_pretty(json_encode(array())));
 	file_put_contents(INSTAGRAM_PHOTOS_METADATA_FILE, make_json_pretty(json_encode(array())));
 	file_put_contents(INSTAGRAM_USERS_METADATA_FILE, make_json_pretty(json_encode(array())));
-
+	file_put_contents(DOWNLOAD_INSTAGRAM_PHOTOS_SCHEDULER_SHELL_SCRIPT, '');
+	file_put_contents(DOWNLOAD_INSTAGRAM_PHOTOS_SCHEDULER_PID, '');
+	
 	if ($resetProxySettings)
 	{
 		$keysToSetNullAndReset = unserialize(PROXY_SETTINGS_KEYS_SERIALIZED);
