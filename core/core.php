@@ -13,6 +13,9 @@
 // Turn this on for debugging!
 error_reporting(E_ALL);
 
+// Start all sessions!
+session_start();
+
 date_default_timezone_set('Australia/Sydney');
 define('PROXY_SETTINGS_KEYS_SERIALIZED', serialize(array('proxy-server', 'proxy-port', 'proxy-username', 'proxy-password')));
 define('INSTAGRAM_WEBSITE', "http://instagram.com/");
@@ -277,12 +280,7 @@ function museum_now_is_installed()
  * @param $message The message to log.
  */
 function log_message($message)
-{
-   if (is_running_from_command_line())
-   {
-      echo $message."\r\n";
-   }
-	
+{	
 	// Open JSON log file if it exists
 	$logJSON = array();
 	if (file_exists(LOG_FILE))
@@ -617,6 +615,7 @@ function redirect_to_setup_page_if_not_installed()
 	{
 		$redirectURL = determine_museum_now_root()."setup";
 		header("Location: {$redirectURL}");
+		exit();
 	}
 }
 
@@ -625,8 +624,12 @@ function redirect_to_setup_page_if_not_installed()
  */
 function establish_setup_session()
 {
-	session_start();
 	$_SESSION['setup-running'] = TRUE;
+}
+
+function end_setup_session()
+{
+	$_SESSION['setup-running'] = FALSE;
 }
 
 /**
@@ -635,8 +638,7 @@ function establish_setup_session()
  */
 function setup_session_is_running()
 {
-	session_start();
-	return isset($_SESSION['setup-running']);
+	return $_SESSION['setup-running'];
 }
 
 /**
@@ -649,6 +651,7 @@ function go_to_tutorial_introduction_if_not_in_setup_session()
 	{
 		$redirectURL = determine_museum_now_root()."setup/intro";
 		header("Location: {$redirectURL}");
+		exit();
 	}
 }
 
@@ -659,10 +662,10 @@ function go_to_tutorial_introduction_if_not_in_setup_session()
 function permissions_ok()
 {
 	$filePathsToTest = array(
-		 STORE_DIR,
 		 CONFIG_DIR,
 		 INSTAGRAM_PHOTOS_DIR,
-		 INSTAGRAM_USERS_DIR
+		 INSTAGRAM_USERS_DIR,
+		 DIGITALSIGN_ASSETS_DIR
 	);
 	
 	foreach ($filePathsToTest as $filePathToTest)

@@ -95,11 +95,6 @@ form {
 	color: #333333;
 }
 
-li {
-	margin-top: 20px;
-	margin-bottom: 20px;
-}
-
 form {
 	margin-top: 30px;
 	margin-bottom: 30px;
@@ -108,4 +103,18 @@ form {
 .progress {
 	margin-top: 30px;
 	margin-bottom: 30px;
+}
+
+.jumbotron h3 {
+	margin-top: 50px;
+}
+
+.jumbotron li {
+	margin-top: 20px;
+	margin-bottom: 20px;
+	line-height: 1.4em;
+}
+
+.alert {
+	line-height: 1.4em;
 }

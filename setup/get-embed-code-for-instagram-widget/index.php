@@ -48,9 +48,13 @@ start_instagram_downloader();
 		<div class="container">
 			<div class="jumbotron">
 				<h1 class="fancy-title center-text">Your Instagram Stream</h1>
-				<p>With Museum Now, you can create your own embedded timeline that you can place straight on to your museum website or CMS. If you ever need to grab the code, just bookmark this URL.</p>
+				<?php if (setup_session_is_running()) : ?>
+					<p>With Museum Now, you can create your own embedded timeline that you can place straight on to your museum website or CMS. If you ever need to grab the code, just bookmark this URL.</p>
+				<?php endif ; ?>
 				<p>Does your museum also have a Twitter account? Why not <a href="https://twitter.com/settings/widgets/new">add an embedded Twitter timeline to your site?</a></p>
-				<a href="../digitalsign/" class="btn btn-default" role="button">Continue</a>
+				<?php if (setup_session_is_running()) : ?>
+					<a href="../digitalsign/" class="btn btn-default" role="button">Continue</a>
+				<?php endif ; ?>
 			</div>
 			<div class="col-xs-7">
 				<form role="form" class="form-horizontal">

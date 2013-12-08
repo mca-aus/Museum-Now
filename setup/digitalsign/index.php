@@ -23,9 +23,10 @@ if(is_running_from_command_line())
 }
 
 /**
- * Setup is 'complete' - we can mark it as such in the config file 
+ * Setup is 'complete'
  */
 set_metadata('setup-complete', true);
+end_setup_session();
 
 if (isset($_FILES['banner-image-asset-upload']) && !empty($_FILES['banner-image-asset-upload']['tmp_name']))
 {

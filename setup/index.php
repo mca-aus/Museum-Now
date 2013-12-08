@@ -23,14 +23,8 @@ if(is_running_from_command_line())
 	exit();
 }
 
-if(!permissions_ok())
-{
-	output_permissions_error();
-	exit();
-}
-
-set_metadata('museum-now-root', determine_museum_now_root());
 $redirectURL = determine_museum_now_root()."setup/intro";
 header("Location: {$redirectURL}");
+exit();
 
 ?>

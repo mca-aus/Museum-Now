@@ -37,6 +37,7 @@ if (isset($_POST['client-id']) && isset($_POST['client-secret']))
 	$redirectURI = get_metadata('museum-now-root')."setup/instagram-app-registration";
 	$redirectURL = "https://api.instagram.com/oauth/authorize/?client_id={$clientID}&redirect_uri={$redirectURI}&response_type=code";
 	header("Location: {$redirectURL}");
+	exit();
 }
 
 /**
@@ -78,6 +79,7 @@ if (isset($_GET['code']))
 	// If all goes well, then redirect to /instagram-app-registration
 	$redirectURL = determine_museum_now_root()."setup/download-instagram-stream";
 	header("Location: {$redirectURL}");
+	exit();
 }
 
 ?>
@@ -98,7 +100,7 @@ if (isset($_GET['code']))
 	<body>
 		<div class="container">
 			<div class="jumbotron">
-				<h1 class="fancy-title">Set up Instagram API</h1>
+				<h1 class="fancy-title">Set up Instagram</h1>
 				<p>In the next step, we are going to get Instagram to give us permission to access its data. To continue, make sure you're logged into your museum's Instagram account.</p>
 				<ol>
 					<li>

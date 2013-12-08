@@ -11,6 +11,7 @@
  *
  */
 
+$suppressSetupPageRedirect = TRUE;
 require_once(realpath(dirname(__FILE__).'/../../core/core.php'));
 
 /**
@@ -32,18 +33,12 @@ establish_setup_session();
 	
 	output_setup_html_head();
 		
-	if(!permissions_ok())
-	{
-		output_permissions_error();
-		exit();
-	}
-	
 	if (!connectivity_ok())
 	{
 		output_connectivity_error();
 		exit();
 	}
-
+	
 	?>
 	<body class="title-card">
 		<div class="container">
@@ -51,7 +46,7 @@ establish_setup_session();
 				<h1 class="fancy-title">Museum Now</h1>
 				<p>Museum Now uses Instagram to tell the real time story of your museum, as seen through the eyes of your staff, visitors and collaborators.</p>
 				<p>To continue, you will need to be the administrator of your institution's Instagram account.</p>
-				<p><a href="../instagram-account-basics/" class="btn btn-primary btn-lg" role="button">Set Up Museum Now</a></p>
+				<p><a href="../set-permissions/" class="btn btn-primary btn-lg" role="button">Set Up Museum Now</a></p>
 			</div>			
 		</div>
 	</body>

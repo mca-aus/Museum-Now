@@ -64,7 +64,7 @@ go_to_tutorial_introduction_if_not_in_setup_session();
 				
 				if (instagramAPIStatusResponse == 200)
 				{
-					window.location.replace('../get-embed-code-for-instagram-widget');
+					window.location.replace('../get-embed-code-for-instagram-widget/');
 				}
 				else
 				{

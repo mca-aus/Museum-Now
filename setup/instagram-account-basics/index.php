@@ -40,6 +40,7 @@ if (isset($_POST['institution-name']) && isset($_POST['instagram-account-name'])
 	// If all goes well, then redirect to /instagram-app-registration
 	$redirectURL = determine_museum_now_root(TRUE)."setup/instagram-app-registration";
 	header("Location: {$redirectURL}");
+	exit();
 }
 
 ?>
@@ -60,7 +61,7 @@ if (isset($_POST['institution-name']) && isset($_POST['instagram-account-name'])
 	<body>
 		<div class="container">
 			<div class="jumbotron">
-				<h1 class="fancy-title">First, a Few Details ...</h1>
+				<h1 class="fancy-title">A Few Details ...</h1>
 				<form role="form" method="POST" action="./">
 					<div class="form-group">
 						<p>The name of your museum or gallery</p>

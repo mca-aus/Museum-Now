@@ -26,6 +26,7 @@ else
 }
 
 header("Location: {$redirectURL}");
+exit();
 
 ?>
 
