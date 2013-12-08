@@ -24,3 +24,5 @@ get/instagram-users.json
 /test/proxy-settings-set.test.php
 /test/proxy-settings-unset.test.php
 /test/determine-museum-now-root.test.php
+/test/proxy-settings-set.php
+/test/proxy-settings-unset.php
