@@ -470,6 +470,7 @@ function reset_installation($resetProxySettings = TRUE)
 		}
 	}
 	file_put_contents(CONFIG_FILE, make_json_pretty(json_encode((object) array())));
+	file_put_contents(DIGITALSIGN_ASSETS_METADATA_FILE, make_json_pretty(json_encode((object) array())));
 	file_put_contents(LOG_FILE, make_json_pretty(json_encode(array())));
 	file_put_contents(INSTAGRAM_PHOTOS_METADATA_FILE, make_json_pretty(json_encode(array())));
 	file_put_contents(INSTAGRAM_USERS_METADATA_FILE, make_json_pretty(json_encode(array())));

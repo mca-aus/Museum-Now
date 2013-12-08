@@ -29,6 +29,14 @@ if (!is_running_from_command_line())
 }
 
 /**
+ * Don't actually execute this script unless Museum Now is installed. 
+ */
+if (!museum_now_is_installed())
+{
+	exit();
+}
+
+/**
  * Increased maximum execution time to 5 minutes to allow for potentially long
  * operation of downloading photos from the Instagram stream. 
  */
