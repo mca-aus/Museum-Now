@@ -10,6 +10,6 @@ Instructions for Installation
 
 2. If you've downloaded the ZIP package, extract the contents and rename the folder to something nice, such as 'mca-now' or 'sfmoma-now' (or even just 'museum-now').
 
-3. Using your favourite FTP program, upload the folder to your server.
+3. Using your favourite FTP program, upload the folder to a Web server.
 
 4. Point your Web browser to the URL that corresponds with the folder on the server, and follow the setup wizard.
